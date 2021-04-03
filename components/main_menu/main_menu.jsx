@@ -4,6 +4,7 @@
 import PropTypes from 'prop-types';
 import React from 'react';
 import {injectIntl} from 'react-intl';
+
 import {Permissions} from 'mattermost-redux/constants';
 
 import * as GlobalActions from 'actions/global_actions';
@@ -63,6 +64,7 @@ class MainMenu extends React.PureComponent {
         showNextStepsTips: PropTypes.bool,
         isCloud: PropTypes.bool,
         subscriptionStats: PropTypes.object,
+        firstAdminVisitMarketplaceStatus: PropTypes.bool,
         actions: PropTypes.shape({
             openModal: PropTypes.func.isRequred,
             showMentions: PropTypes.func,
@@ -70,6 +72,7 @@ class MainMenu extends React.PureComponent {
             closeRightHandSide: PropTypes.func.isRequired,
             closeRhsMenu: PropTypes.func.isRequired,
             unhideNextSteps: PropTypes.func.isRequired,
+            getSubscriptionStats: PropTypes.func.isRequired,
         }).isRequired,
     };
 
@@ -117,6 +120,15 @@ class MainMenu extends React.PureComponent {
             this.props.actions.closeRhsMenu();
             this.props.actions.showMentions();
         }
+    }
+
+    shouldShowUpgradeModal = () => {
+        const {subscriptionStats, isCloud} = this.props;
+
+        if (subscriptionStats?.is_paid_tier === 'true') { // eslint-disable-line camelcase
+            return false;
+        }
+        return isCloud && subscriptionStats?.remaining_seats <= 0;
     }
 
     render() {
@@ -316,6 +328,7 @@ class MainMenu extends React.PureComponent {
                             show={!this.props.mobile && this.props.enablePluginMarketplace}
                             dialogType={MarketplaceModal}
                             text={formatMessage({id: 'navbar_dropdown.marketplace', defaultMessage: 'Plugin Marketplace'})}
+                            showUnread={!this.props.firstAdminVisitMarketplaceStatus}
                         />
                     </TeamPermissionGate>
                     <Menu.ItemLink
